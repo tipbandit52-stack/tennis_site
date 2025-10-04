@@ -6,44 +6,35 @@ import cloudinary
 import cloudinary.uploader
 import cloudinary.api
 
-# =======================
-# .env
-# =======================
+# --- .env ---
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# =======================
-# Основные настройки
-# =======================
+# --- Core ---
 SECRET_KEY = os.getenv('SECRET_KEY', 'замени-на-секретный-ключ')
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
 
-# =======================
-# CSRF / Cookies
-# =======================
+# --- CSRF / Cookies ---
 CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:8000",
     "http://localhost:8000",
-    "https://tennis-site.onrender.com",  # адрес твоего хостинга Render
+    "https://tennis-site.onrender.com",
 ]
-
 SESSION_COOKIE_SAMESITE = None
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
 
-# =======================
-# Приложения
-# =======================
+# --- Apps ---
 INSTALLED_APPS = [
-    # Внешние пакеты
+    # внешние
     'cloudinary',
     'cloudinary_storage',
     'widget_tweaks',
     'channels',
 
-    # Твои приложения
+    # твои
     'api',
     'tournaments',
     'friends',
@@ -52,7 +43,7 @@ INSTALLED_APPS = [
     'users',
     'players',
 
-    # Django системные
+    # django
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -61,12 +52,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 ]
 
-# =======================
-# Middleware
-# =======================
+# --- Middleware ---
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # ⚡ для статики на Render
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -77,9 +66,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'tennis_site.urls'
 
-# =======================
-# Templates
-# =======================
+# --- Templates ---
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -96,20 +83,13 @@ TEMPLATES = [
     },
 ]
 
-# =======================
-# ASGI / Channels
-# =======================
+# --- ASGI / Channels ---
 ASGI_APPLICATION = "tennis_site.asgi.application"
-
 CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",
-    },
+    "default": {"BACKEND": "channels.layers.InMemoryChannelLayer"},
 }
 
-# =======================
-# База данных
-# =======================
+# --- DB ---
 DATABASES = {
     'default': dj_database_url.config(
         default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
@@ -117,9 +97,7 @@ DATABASES = {
     )
 }
 
-# =======================
-# Проверка паролей
-# =======================
+# --- Password validation ---
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -127,49 +105,38 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# =======================
-# Локализация
-# =======================
+# --- I18N ---
 LANGUAGE_CODE = 'ru-ru'
 TIME_ZONE = 'Asia/Almaty'
 USE_I18N = True
 USE_TZ = True
 
-# =======================
-# Статика
-# =======================
+# --- Static ---
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# =======================
-# Медиа и Cloudinary
-# =======================
-CLOUDINARY_URL = os.getenv("CLOUDINARY_URL")
+# --- Media (локально не используется бэкендом Cloudinary, но оставим дефолт) ---
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
+# --- Cloudinary ---
+CLOUDINARY_URL = os.getenv("CLOUDINARY_URL")  # формат: cloudinary://API_KEY:API_SECRET@CLOUD_NAME
 if CLOUDINARY_URL and CLOUDINARY_URL.startswith("cloudinary://"):
-    cloudinary.config(cloudinary_url=CLOUDINARY_URL)
+    cloudinary.config(cloudinary_url=CLOUDINARY_URL, secure=True)
+    # основной бэкенд для ImageField/FileField
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-    MEDIA_URL = 'https://res.cloudinary.com/di03fd6fk/'  # твой Cloudinary аккаунт
 else:
-    print("⚠️ Внимание: CLOUDINARY_URL не найден или имеет неверный формат. Используется локальное хранилище.")
-    MEDIA_URL = '/media/'
-    MEDIA_ROOT = BASE_DIR / 'media'
+    # фолбэк на локальные файлы, если переменной нет или испорчена
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
-# =======================
-# Авторизация
-# =======================
+# --- Auth redirects ---
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'my_profile'
 LOGOUT_REDIRECT_URL = 'index'
 
-# =======================
-# Универсальный API ключ
-# =======================
+# --- API key ---
 UNIVERSAL_API_KEY = os.getenv('UNIVERSAL_API_KEY', 'super-secret-key-123')
 
-# =======================
-# Общие
-# =======================
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
