@@ -2,6 +2,9 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 import dj_database_url
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
 # =======================
 # .env
@@ -133,22 +136,26 @@ USE_I18N = True
 USE_TZ = True
 
 # =======================
-# Статика и медиа
+# Статика
 # =======================
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Локальные медиа (используются только при DEBUG=True)
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# =======================
+# Медиа и Cloudinary
+# =======================
+CLOUDINARY_URL = os.getenv("CLOUDINARY_URL")
 
-# =======================
-# Cloudinary (для Render)
-# =======================
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-CLOUDINARY_URL = os.getenv('CLOUDINARY_URL')
+if CLOUDINARY_URL and CLOUDINARY_URL.startswith("cloudinary://"):
+    cloudinary.config(cloudinary_url=CLOUDINARY_URL)
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    MEDIA_URL = 'https://res.cloudinary.com/di03fd6fk/'  # твой Cloudinary аккаунт
+else:
+    print("⚠️ Внимание: CLOUDINARY_URL не найден или имеет неверный формат. Используется локальное хранилище.")
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = BASE_DIR / 'media'
 
 # =======================
 # Авторизация
@@ -162,23 +169,7 @@ LOGOUT_REDIRECT_URL = 'index'
 # =======================
 UNIVERSAL_API_KEY = os.getenv('UNIVERSAL_API_KEY', 'super-secret-key-123')
 
+# =======================
+# Общие
+# =======================
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# =======================
-# Cloudinary конфигурация (фиксация ошибки "Invalid CLOUDINARY_URL")
-# =======================
-# =======================
-# Cloudinary (хранение фото)
-# =======================
-import cloudinary
-import cloudinary.uploader
-import cloudinary.api
-
-CLOUDINARY_URL = os.getenv("CLOUDINARY_URL")
-
-if CLOUDINARY_URL and CLOUDINARY_URL.startswith("cloudinary://"):
-    cloudinary.config(cloudinary_url=CLOUDINARY_URL)
-else:
-    print("⚠️ Внимание: CLOUDINARY_URL не найден или имеет неверный формат!")
-
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
