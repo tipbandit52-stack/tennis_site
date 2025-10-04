@@ -167,6 +167,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # =======================
 # Cloudinary конфигурация (фиксация ошибки "Invalid CLOUDINARY_URL")
 # =======================
+# =======================
+# Cloudinary (хранение фото)
+# =======================
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
@@ -176,5 +179,6 @@ CLOUDINARY_URL = os.getenv("CLOUDINARY_URL")
 if CLOUDINARY_URL and CLOUDINARY_URL.startswith("cloudinary://"):
     cloudinary.config(cloudinary_url=CLOUDINARY_URL)
 else:
-    # 🚨 Это защита от ошибки "Invalid CLOUDINARY_URL"
-    raise ValueError("❌ CLOUDINARY_URL is invalid or missing. It must start with 'cloudinary://'")
+    print("⚠️ Внимание: CLOUDINARY_URL не найден или имеет неверный формат!")
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
