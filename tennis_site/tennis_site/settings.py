@@ -3,7 +3,9 @@ import os
 from dotenv import load_dotenv
 import dj_database_url
 
-# === Загружаем переменные из .env ===
+# =======================
+# .env
+# =======================
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -16,12 +18,12 @@ DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
 
 # =======================
-# CSRF (разрешённые домены)
+# CSRF / Cookies
 # =======================
 CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:8000",
     "http://localhost:8000",
-    "https://tennis-site.onrender.com",  # ← сюда позже добавим адрес с хостинга
+    "https://tennis-site.onrender.com",  # адрес твоего хостинга Render
 ]
 
 SESSION_COOKIE_SAMESITE = None
@@ -32,15 +34,22 @@ CSRF_COOKIE_SECURE = not DEBUG
 # Приложения
 # =======================
 INSTALLED_APPS = [
-    'api',
+    # Внешние пакеты
+    'cloudinary',
+    'cloudinary_storage',
     'widget_tweaks',
     'channels',
+
+    # Твои приложения
+    'api',
     'tournaments',
     'friends',
     'chat',
     'matches',
     'users',
     'players',
+
+    # Django системные
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -54,7 +63,7 @@ INSTALLED_APPS = [
 # =======================
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # ⚡ обязательно для деплоя
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # ⚡ для статики на Render
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -65,6 +74,9 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'tennis_site.urls'
 
+# =======================
+# Templates
+# =======================
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -103,7 +115,7 @@ DATABASES = {
 }
 
 # =======================
-# Пароли
+# Проверка паролей
 # =======================
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -128,8 +140,15 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
+# Локальные медиа (используются только при DEBUG=True)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# =======================
+# Cloudinary (для Render)
+# =======================
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+CLOUDINARY_URL = os.getenv('CLOUDINARY_URL')
 
 # =======================
 # Авторизация
@@ -138,9 +157,9 @@ LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'my_profile'
 LOGOUT_REDIRECT_URL = 'index'
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
 # =======================
-# 🔑 Универсальный API ключ
+# Универсальный API ключ
 # =======================
 UNIVERSAL_API_KEY = os.getenv('UNIVERSAL_API_KEY', 'super-secret-key-123')
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
