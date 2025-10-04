@@ -163,3 +163,18 @@ LOGOUT_REDIRECT_URL = 'index'
 UNIVERSAL_API_KEY = os.getenv('UNIVERSAL_API_KEY', 'super-secret-key-123')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# =======================
+# Cloudinary конфигурация (фиксация ошибки "Invalid CLOUDINARY_URL")
+# =======================
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+
+CLOUDINARY_URL = os.getenv("CLOUDINARY_URL")
+
+if CLOUDINARY_URL and CLOUDINARY_URL.startswith("cloudinary://"):
+    cloudinary.config(cloudinary_url=CLOUDINARY_URL)
+else:
+    # 🚨 Это защита от ошибки "Invalid CLOUDINARY_URL"
+    raise ValueError("❌ CLOUDINARY_URL is invalid or missing. It must start with 'cloudinary://'")
