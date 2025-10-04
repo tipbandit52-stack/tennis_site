@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}Друзья{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">👥 Друзья</h2>
+
+<ul class="nav nav-tabs mb-4" role="tablist">
+  <li class="nav-item" role="presentation">
+    <a class="nav-link {% if active_tab == 'friends' %}active{% endif %}"
+       href="?tab=friends" role="tab">Мои друзья
+      <span class="badge bg-secondary ms-2">{{ friends|length }}</span>
+    </a>
+  </li>
+  <li class="nav-item" role="presentation">
+    <a class="nav-link {% if active_tab == 'incoming' %}active{% endif %}"
+       href="?tab=incoming" role="tab">Входящие
+      <span class="badge bg-secondary ms-2">{{ incoming_requests|length }}</span>
+    </a>
+  </li>
+  <li class="nav-item" role="presentation">
+    <a class="nav-link {% if active_tab == 'outgoing' %}active{% endif %}"
+       href="?tab=outgoing" role="tab">Исходящие
+      <span class="badge bg-secondary ms-2">{{ outgoing_requests|length }}</span>
+    </a>
+  </li>
+</ul>
+
+{# ---------- Список: Мои друзья ---------- #}
+{% if active_tab == 'friends' %}
+  {% if friends %}
+    <div class="list-group">
+      {% for item in friends %}
+        {% with p=item.player %}
+        <div class="list-group-item d-flex align-items-center justify-content-between py-3 chat-row">
+          <div class="d-flex align-items-center gap-3">
+            {% if p.photo %}
+              <img src="{{ p.photo.url }}" alt="" class="rounded-circle" style="width:48px;height:48px;object-fit:cover;">
+            {% else %}
+              <img src="https://via.placeholder.com/48?text=U" alt="" class="rounded-circle" style="width:48px;height:48px;object-fit:cover;">
+            {% endif %}
+            <div>
+              <div class="fw-semibold">{{ p.first_name }} {{ p.last_name }}</div>
+              {% if p.address %}<div class="text-muted small">{{ p.address }}</div>{% endif %}
+            </div>
+          </div>
+          <div class="friend-actions">
+            <a href="{% url 'player_detail' p.pk %}" class="btn btn-dark btn-sm">Профиль</a>
+            <a href="{% url 'chat:chat_with' p.pk %}" class="btn btn-outline-dark btn-sm">Сообщение</a>
+            <form method="post" action="{% url 'remove_friend' item.friendship_pk %}?tab=friends" class="d-inline">
+              {% csrf_token %}
+              <button class="btn btn-outline-danger btn-sm">Удалить</button>
+            </form>
+          </div>
+        </div>
+        {% endwith %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="text-muted">Пока нет друзей.</div>
+  {% endif %}
+{% endif %}
+
+{# ---------- Список: Входящие ---------- #}
+{% if active_tab == 'incoming' %}
+  {% if incoming_requests %}
+    <div class="list-group">
+      {% for item in incoming_requests %}
+        {% with p=item.player %}
+        <div class="list-group-item d-flex align-items-center justify-content-between py-3 chat-row">
+          <div class="d-flex align-items-center gap-3">
+            {% if p.photo %}
+              <img src="{{ p.photo.url }}" alt="" class="rounded-circle" style="width:48px;height:48px;object-fit:cover;">
+            {% else %}
+              <img src="https://via.placeholder.com/48?text=U" alt="" class="rounded-circle" style="width:48px;height:48px;object-fit:cover;">
+            {% endif %}
+            <div>
+              <div class="fw-semibold">{{ p.first_name }} {{ p.last_name }}</div>
+              {% if p.address %}<div class="text-muted small">{{ p.address }}</div>{% endif %}
+            </div>
+          </div>
+          <div class="friend-actions">
+            <a href="{% url 'player_detail' p.pk %}" class="btn btn-dark btn-sm">Профиль</a>
+            <a href="{% url 'chat:chat_with' p.pk %}" class="btn btn-outline-dark btn-sm">Сообщение</a>
+            <form method="post" action="{% url 'accept_friend' item.friendship_pk %}?tab=incoming" class="d-inline">
+              {% csrf_token %}
+              <button class="btn btn-success btn-sm">Принять</button>
+            </form>
+            <form method="post" action="{% url 'reject_friend' item.friendship_pk %}?tab=incoming" class="d-inline">
+              {% csrf_token %}
+              <button class="btn btn-outline-danger btn-sm">Отклонить</button>
+            </form>
+          </div>
+        </div>
+        {% endwith %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="text-muted">Нет входящих заявок.</div>
+  {% endif %}
+{% endif %}
+
+{# ---------- Список: Исходящие ---------- #}
+{% if active_tab == 'outgoing' %}
+  {% if outgoing_requests %}
+    <div class="list-group">
+      {% for item in outgoing_requests %}
+        {% with p=item.player %}
+        <div class="list-group-item d-flex align-items-center justify-content-between py-3 chat-row">
+          <div class="d-flex align-items-center gap-3">
+            {% if p.photo %}
+              <img src="{{ p.photo.url }}" alt="" class="rounded-circle" style="width:48px;height:48px;object-fit:cover;">
+            {% else %}
+              <img src="https://via.placeholder.com/48?text=U" alt="" class="rounded-circle" style="width:48px;height:48px;object-fit:cover;">
+            {% endif %}
+            <div>
+              <div class="fw-semibold">{{ p.first_name }} {{ p.last_name }}</div>
+              {% if p.address %}<div class="text-muted small">{{ p.address }}</div>{% endif %}
+            </div>
+          </div>
+          <div class="friend-actions">
+            <a href="{% url 'player_detail' p.pk %}" class="btn btn-dark btn-sm">Профиль</a>
+            <a href="{% url 'chat:chat_with' p.pk %}" class="btn btn-outline-dark btn-sm">Сообщение</a>
+            <form method="post" action="{% url 'cancel_request' item.friendship_pk %}?tab=outgoing" class="d-inline">
+              {% csrf_token %}
+              <button class="btn btn-outline-warning btn-sm">Отменить</button>
+            </form>
+          </div>
+        </div>
+        {% endwith %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="text-muted">Нет исходящих заявок.</div>
+  {% endif %}
+{% endif %}
+
+{% endblock %}

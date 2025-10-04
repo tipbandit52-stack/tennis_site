@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Подтверждение{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-body text-center">
+    <h3 class="mb-3">{{ title|default:"Подтверждение действия" }}</h3>
+    <p class="text-muted">{{ message|default:"Вы уверены?" }}</p>
+    <form method="post">
+      {% csrf_token %}
+      <button class="btn btn-dark">Подтвердить</button>
+      <a href="{% url 'friends_list' %}" class="btn btn-outline-dark ms-2">Отмена</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

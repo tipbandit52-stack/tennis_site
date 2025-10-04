@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}{% if form.instance.pk %}Редактирование матча{% else %}Создать матч{% endif %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h3 class="mb-4 text-center">{% if form.instance.pk %}Редактирование матча{% else %}Создать матч{% endif %}</h3>
+
+        <form method="post" enctype="multipart/form-data" class="form-narrow">
+          {% csrf_token %}
+          {{ form.non_field_errors }}
+
+          {% for field in form.visible_fields %}
+            <div class="mb-3 text-center">
+              <label class="form-label d-block">{{ field.label }}</label>
+              {{ field.as_widget }}
+              {% if field.help_text %}<div class="form-text">{{ field.help_text|safe }}</div>{% endif %}
+              {% for e in field.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+            </div>
+          {% endfor %}
+
+          <div class="text-center mt-4 d-flex justify-content-center gap-3">
+            <button class="btn btn-dark px-4">Сохранить</button>
+            <a href="{% url 'match_list' %}" class="btn btn-outline-dark px-4">Отмена</a>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

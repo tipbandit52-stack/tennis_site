@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Удаление достижения{% endblock %}
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-body text-center">
+    <h3 class="mb-3">Удалить достижение «{{ achievement.title }}»?</h3>
+    <form method="post">
+      {% csrf_token %}
+      <button class="btn btn-outline-danger">Удалить</button>
+      <a href="{% url 'player_detail' achievement.player.pk %}" class="btn btn-dark ms-2">Отмена</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

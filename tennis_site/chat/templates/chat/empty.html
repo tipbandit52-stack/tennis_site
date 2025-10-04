@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Чат{% endblock %}
+{% block content %}
+<div class="text-center py-5">
+  <h3 class="mb-3">Здесь пока пусто</h3>
+  <p class="text-muted">Выберите собеседника в списке чатов или начните новый диалог из профиля игрока.</p>
+  <a href="{% url 'players_list' %}" class="btn btn-dark">Найти игрока</a>
+</div>
+{% endblock %}

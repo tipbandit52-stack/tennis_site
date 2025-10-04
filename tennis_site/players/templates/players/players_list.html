@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Игроки{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="mb-0">🎾 Игроки</h2>
+  <button class="btn btn-outline-dark" type="button" data-bs-toggle="collapse" data-bs-target="#filterForm">
+    🔍 Фильтр
+  </button>
+</div>
+
+<div class="collapse mb-4" id="filterForm">
+  <div class="card card-body">
+    <form method="get" class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label">ФИО</label>
+        {{ form.name.as_widget|safe }}
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Возраст от</label>
+        {{ form.min_age.as_widget|safe }}
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">до</label>
+        {{ form.max_age.as_widget|safe }}
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Уровень</label>
+        {{ form.level.as_widget|safe }}
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Город</label>
+        {{ form.address.as_widget|safe }}
+      </div>
+      <div class="col-12 text-center">
+        <button class="btn btn-dark">Применить</button>
+        <a href="{% url 'players_list' %}" class="btn btn-outline-dark">Сбросить</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="row g-3">
+  {% for player in players %}
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="card h-100 shadow-sm">
+        {% if player.photo %}
+          <img src="{{ player.photo.url }}" class="card-img-top" style="height:220px; object-fit:cover;" alt="">
+        {% else %}
+          <img src="https://via.placeholder.com/600x400?text=Player" class="card-img-top" style="height:220px; object-fit:cover;" alt="">
+        {% endif %}
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title mb-2">
+            <a class="text-decoration-none" href="{% url 'player_detail' player.pk %}">
+              {{ player.first_name }} {{ player.last_name }}
+            </a>
+          </h5>
+          <p class="mb-1"><strong>Возраст:</strong> {{ player.age }}</p>
+          <p class="mb-1"><strong>Уровень:</strong> {{ player.get_level_display }}</p>
+          <p class="mb-3"><small><strong>Адрес:</strong> {{ player.address|default:"не указан" }}</small></p>
+
+          <div class="mt-auto d-flex gap-2">
+            <a href="{% url 'player_detail' player.pk %}" class="btn btn-dark btn-sm">Профиль</a>
+            {% if user.is_authenticated and user == player.user %}
+              <a href="{% url 'player_edit' player.pk %}" class="btn btn-outline-dark btn-sm">Редактировать</a>
+              <a href="{% url 'player_delete' player.pk %}" class="btn btn-outline-danger btn-sm">Удалить</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  {% empty %}
+    <p>Пока игроков нет.</p>
+  {% endfor %}
+</div>
+{% endblock %}

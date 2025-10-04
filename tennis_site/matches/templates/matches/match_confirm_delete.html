@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Удалить матч{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-body text-center">
+    <h3 class="mb-3">Удалить матч «{{ object.player1 }} vs {{ object.player2|default:"(ожидается)" }}»?</h3>
+    <p class="text-muted">Дата/время: {{ object.date }} {{ object.time }} • Локация: {{ object.location }}</p>
+    <form method="post">
+      {% csrf_token %}
+      <button class="btn btn-outline-danger">Удалить</button>
+      <a href="{% url 'match_list' %}" class="btn btn-dark ms-2">Отмена</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Заявки в друзья{% endblock %}
+
+{% block content %}
+<h1>Заявки в друзья</h1>
+
+{% if messages %}
+  <ul class="messages">
+    {% for message in messages %}
+      <li class="{{ message.tags }}">{{ message }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+<h2>Входящие</h2>
+{% if incoming %}
+  <ul>
+    {% for fr in incoming %}
+      <li style="margin-bottom: 8px;">
+        От:
+        <a href="{% url 'player_detail' fr.from_player.player_profile.pk %}">
+          {{ fr.from_player.get_full_name|default:fr.from_player.username }}
+        </a>
+        &nbsp;
+        <a href="{% url 'accept_friend' fr.pk %}">Принять</a>
+        &nbsp;|&nbsp;
+        <a href="{% url 'reject_friend' fr.pk %}">Отклонить</a>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>Входящих заявок нет.</p>
+{% endif %}
+
+<hr>
+
+<h2>Исходящие</h2>
+{% if outgoing %}
+  <ul>
+    {% for fr in outgoing %}
+      <li style="margin-bottom: 8px;">
+        Кому:
+        <a href="{% url 'player_detail' fr.to_player.player_profile.pk %}">
+          {{ fr.to_player.get_full_name|default:fr.to_player.username }}
+        </a>
+        &nbsp;
+        <a href="{% url 'cancel_request' fr.pk %}">Отменить заявку</a>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>Исходящих заявок нет.</p>
+{% endif %}
+
+<p style="margin-top: 20px;">
+  <a href="{% url 'friends_list' %}">Вернуться к друзьям</a>
+</p>
+{% endblock %}

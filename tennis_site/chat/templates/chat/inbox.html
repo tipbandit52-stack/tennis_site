@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Мои чаты{% endblock %}
+
+{% block content %}
+<h3 class="mb-3">💬 Мои чаты</h3>
+
+{% if items %}
+  <ul class="list-group" id="chat-list">
+    {% for item in items %}
+      {% if item.other %}
+        <li class="list-group-item">
+          <a href="{% url 'chat:chat_with' item.other.id %}" class="text-decoration-none text-reset d-flex align-items-center">
+            <img src="{{ item.other_photo|default:'https://via.placeholder.com/48' }}" class="rounded-circle me-3" width="48" height="48" alt="">
+            <div class="flex-grow-1">
+              <div class="d-flex align-items-center">
+                <strong class="me-2">{{ item.other.first_name }} {{ item.other.last_name }}</strong>
+                {% if item.unread_count > 0 %}
+                  <span class="badge bg-danger">{{ item.unread_count }}</span>
+                {% endif %}
+              </div>
+              <small class="text-muted">{{ item.last_message_preview }}</small>
+            </div>
+          </a>
+        </li>
+      {% endif %}
+    {% endfor %}
+  </ul>
+{% else %}
+  <p class="text-muted">Пока нет переписок.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,111 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}Tennis Site{% endblock %}</title>
+
+  <!-- FlexStart CSS -->
+  <link href="{% static 'flexstart/vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+  <link href="{% static 'flexstart/vendor/bootstrap-icons/bootstrap-icons.css' %}" rel="stylesheet">
+  <link href="{% static 'flexstart/vendor/aos/aos.css' %}" rel="stylesheet">
+  <link href="{% static 'flexstart/vendor/glightbox/css/glightbox.min.css' %}" rel="stylesheet">
+  <link href="{% static 'flexstart/vendor/swiper/swiper-bundle.min.css' %}" rel="stylesheet">
+  <link href="{% static 'flexstart/css/style.css' %}" rel="stylesheet">
+
+  <!-- Твои стили -->
+  <link href="{% static 'styles.css' %}" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Навбар -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="{% url 'index' %}">🎾 Tennis</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div id="nav" class="collapse navbar-collapse">
+        <ul class="navbar-nav ms-auto text-center text-lg-start">
+          <li class="nav-item"><a class="nav-link" href="{% url 'players_list' %}">Игроки</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'tournaments:tournaments_list' %}">Турниры</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'friends_list' %}">Друзья</a></li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'chat:inbox' %}">
+              Чат <span id="chat-unread" class="badge bg-danger" style="display:none;"></span>
+            </a>
+          </li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'match_list' %}">Матчи</a></li>
+          {% if user.is_authenticated %}
+            <li class="nav-item"><a class="nav-link" href="{% url 'my_profile' %}">Мой профиль</a></li>
+            <li class="nav-item logout-item">
+              <form method="post" action="{% url 'logout' %}" class="w-100">
+                {% csrf_token %}
+                <button type="submit" class="nav-link btn-logout w-100">Выйти</button>
+              </form>
+            </li>
+          {% else %}
+            <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Войти</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'register' %}">Регистрация</a></li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Контент -->
+  <main class="container my-5">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-info">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Футер -->
+  <footer class="bg-dark text-light py-4 mt-5">
+    <div class="container text-center">
+      <small>© 2025 Tennis Site. Все права защищены.</small>
+    </div>
+  </footer>
+
+  <!-- FlexStart JS -->
+  <script src="{% static 'flexstart/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'flexstart/vendor/aos/aos.js' %}"></script>
+  <script src="{% static 'flexstart/vendor/glightbox/js/glightbox.min.js' %}"></script>
+  <script src="{% static 'flexstart/vendor/swiper/swiper-bundle.min.js' %}"></script>
+  <script src="{% static 'flexstart/vendor/purecounter/purecounter_vanilla.js' %}"></script>
+
+  <!-- Безопасный main.js -->
+  <script src="{% static 'flexstart/js/main.js' %}"></script>
+
+  <!-- Твой JS -->
+  <script src="{% static 'main.js' %}"></script>
+
+  {% if user.is_authenticated %}
+  <script>
+    async function refreshUnread() {
+      try {
+        const res = await fetch("/chat/api/unread_count/", { headers: {"Accept":"application/json"} });
+        if (!res.ok) return;
+        const data = await res.json();
+        const badge = document.getElementById("chat-unread");
+        if (!badge) return;
+        if (data.count > 0) {
+          badge.textContent = data.count;
+          badge.style.display = "inline-block";
+        } else {
+          badge.style.display = "none";
+        }
+      } catch (e) {
+        console.error("Ошибка при обновлении непрочитанных:", e);
+      }
+    }
+    refreshUnread();
+    setInterval(refreshUnread, 5000);
+  </script>
+  {% endif %}
+</body>
+</html>

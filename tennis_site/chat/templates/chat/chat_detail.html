@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}Чат с {{ other.first_name }} {{ other.last_name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <!-- Заголовок с кнопками -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">💬 Чат с {{ other.first_name }} {{ other.last_name }}</h3>
+    <div class="d-flex gap-2">
+      <a href="{% url 'player_detail' other.pk %}" class="btn btn-outline-dark btn-sm">👤 Профиль</a>
+      <form method="post" action="{% url 'chat:delete_chat' chat.id %}" class="d-inline">
+        {% csrf_token %}
+        <button class="btn btn-outline-danger btn-sm">🗑 Удалить чат</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Окно сообщений -->
+  <div id="chat-box" class="border rounded p-3 mb-3 bg-light"
+       style="max-height: 500px; overflow-y: auto;">
+    {% for msg in chat_messages %}
+      <div class="d-flex mb-3 {% if msg.sender == request.user.player_profile %}justify-content-end{% else %}justify-content-start{% endif %}"
+           data-msg-id="{{ msg.id }}">
+        {% if msg.sender != request.user.player_profile %}
+          <img src="{{ msg.sender.photo.url|default:'https://via.placeholder.com/40' }}"
+               class="rounded-circle me-2" width="40" height="40" alt="{{ msg.sender.first_name }}">
+        {% endif %}
+        <div class="p-2 rounded {% if msg.sender == request.user.player_profile %}bg-primary text-white{% else %}bg-white border{% endif %}"
+             style="max-width: 70%;">
+          <div class="mb-1"><small class="fw-bold">
+            {% if msg.sender == request.user.player_profile %}Вы{% else %}{{ msg.sender.first_name }}{% endif %}
+          </small></div>
+          <div>{{ msg.text|linebreaksbr }}</div>
+          <div class="text-end"><small class="text-muted">{{ msg.created_at|date:"H:i" }}</small></div>
+        </div>
+        {% if msg.sender == request.user.player_profile %}
+          <img src="{{ msg.sender.photo.url|default:'https://via.placeholder.com/40' }}"
+               class="rounded-circle ms-2" width="40" height="40" alt="Вы">
+        {% endif %}
+      </div>
+    {% empty %}
+      <p class="text-muted">Сообщений пока нет.</p>
+    {% endfor %}
+  </div>
+
+  <!-- Форма отправки -->
+  <form id="chat-form" class="d-flex" autocomplete="off">
+    {% csrf_token %}
+    <input id="msg-input" type="text" class="form-control me-2" placeholder="Введите сообщение...">
+    <button class="btn btn-primary" type="submit">Отправить</button>
+  </form>
+</div>
+
+<script>
+  const chatId = {{ chat.id }};
+  const chatBox = document.getElementById("chat-box");
+  const form = document.getElementById("chat-form");
+  const input = document.getElementById("msg-input");
+  const csrftoken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+
+  chatBox.scrollTop = chatBox.scrollHeight;
+
+  function renderMessage(m) {
+    if (document.querySelector(`[data-msg-id="${m.id}"]`)) return;
+    const wrapper = document.createElement("div");
+    wrapper.className = "d-flex mb-3 " + (m.mine ? "justify-content-end" : "justify-content-start");
+    wrapper.setAttribute("data-msg-id", m.id);
+
+    const avatarUrl = m.sender_photo || "https://via.placeholder.com/40";
+    const avatar = `<img src="${avatarUrl}" class="rounded-circle ${m.mine ? 'ms-2' : 'me-2'}" width="40" height="40" alt="${m.mine ? 'Вы' : (m.sender_name || 'Игрок')}">`;
+
+    const bubble = `
+      <div class="p-2 rounded ${m.mine ? 'bg-primary text-white' : 'bg-white border'}" style="max-width:70%;">
+        <div class="mb-1"><small class="fw-bold">${m.mine ? "Вы" : (m.sender_name || "Игрок")}</small></div>
+        <div>${m.text}</div>
+        <div class="text-end"><small class="text-muted">${new Date(m.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small></div>
+      </div>`;
+
+    wrapper.innerHTML = m.mine ? (bubble + avatar) : (avatar + bubble);
+    chatBox.appendChild(wrapper);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const text = (input.value || "").trim();
+    if (!text) return;
+    try {
+      const res = await fetch(`/chat/api/send/${chatId}/`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "X-CSRFToken": csrftoken},
+        body: JSON.stringify({ text })
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      renderMessage(data.message);
+      input.value = "";
+    } catch (err) {
+      console.error("Ошибка отправки:", err);
+    }
+  });
+
+  let lastTs = null;
+  async function poll() {
+    try {
+      const url = lastTs ? `/chat/api/messages/${chatId}/?after=${encodeURIComponent(lastTs)}` : `/chat/api/messages/${chatId}/`;
+      const res = await fetch(url, { headers: {"Accept": "application/json"} });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.messages && data.messages.length) {
+        data.messages.forEach(m => renderMessage(m));
+        lastTs = data.messages[data.messages.length - 1].created_at;
+      }
+    } catch (err) { console.error("Ошибка при загрузке новых сообщений:", err); }
+  }
+  setInterval(poll, 3000);
+
+  (async function markRead() {
+    try {
+      await fetch(`/chat/api/mark_read/${chatId}/`, {
+        method: "POST",
+        headers: {"X-CSRFToken": csrftoken}
+      });
+    } catch (err) { console.error("Ошибка markRead:", err); }
+  })();
+</script>
+{% endblock %}

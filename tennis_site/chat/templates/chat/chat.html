@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Чат с {{ other.first_name }} {{ other.last_name }}{% endblock %}
+{% block content %}
+<h3>Чат с {{ other.first_name }} {{ other.last_name }}</h3>
+<div class="mb-3 p-3 border rounded" style="max-height: 400px; overflow-y: auto;">
+  {% for m in messages %}
+    <div class="mb-2">
+      <strong>{% if m.sender == request.user.player_profile %}Вы{% else %}{{ other.first_name }}{% endif %}:</strong>
+      <div>{{ m.text|linebreaksbr }}</div>
+      <small class="text-muted">{{ m.created_at }}</small>
+    </div>
+  {% empty %}
+    <p>Начните переписку первым сообщением.</p>
+  {% endfor %}
+</div>
+
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button class="btn btn-primary">Отправить</button>
+</form>
+{% endblock %}

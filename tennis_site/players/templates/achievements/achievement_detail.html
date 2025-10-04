@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Достижение: {{ achievement.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="card shadow-sm achievement-card">
+        {% if achievement.photo %}
+          <img src="{{ achievement.photo.url }}" alt="{{ achievement.title }}" 
+               class="achievement-photo card-img-top">
+        {% endif %}
+        <div class="card-body">
+          <h4 class="card-title">{{ achievement.title }}</h4>
+          <p class="achievement-description">{{ achievement.description }}</p>
+          <p class="text-muted small">📅 {{ achievement.date }}</p>
+
+          {% if user.is_authenticated and user.player_profile == achievement.player %}
+            <div class="d-flex justify-content-between mt-3">
+              <a href="{% url 'edit_achievement' achievement.pk %}" class="btn btn-warning btn-sm">✏️ Редактировать</a>
+              <a href="{% url 'delete_achievement' achievement.pk %}" class="btn btn-danger btn-sm">🗑️ Удалить</a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

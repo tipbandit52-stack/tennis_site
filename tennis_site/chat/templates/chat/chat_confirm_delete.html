@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Удалить чат{% endblock %}
+
+{% block content %}
+<div class="alert alert-danger">
+  <h4>Вы уверены, что хотите удалить этот чат?</h4>
+  <p>Все сообщения будут удалены безвозвратно.</p>
+
+  <form method="post">
+    {% csrf_token %}
+    <button class="btn btn-danger">🗑 Удалить</button>
+    <a href="{% url 'chat:chat_with' other.pk %}" class="btn btn-secondary">Отмена</a>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{% if edit_mode %}Редактировать достижение{% else %}Добавить достижение{% endif %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h3 class="card-title text-center mb-4">🏆 {% if edit_mode %}Редактировать{% else %}Добавить{% endif %} достижение</h3>
+
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+
+          <div class="mb-3">
+            {{ form.title.label_tag }} {{ form.title }}
+          </div>
+          <div class="mb-3">
+            {{ form.description.label_tag }} {{ form.description }}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Фото</label>
+            {{ form.photo }}
+            <input type="hidden" name="photo_data" id="photo_data">
+            <div class="mt-3">
+              <img id="crop-image" style="max-width:100%; display:none;"/>
+            </div>
+            <div class="mt-2 d-flex gap-2">
+              <button type="button" class="btn btn-warning" id="btn-crop" style="display:none;">✂️ Обрезать (4:3)</button>
+              <button type="button" class="btn btn-outline-secondary" id="btn-reset" style="display:none;">Сбросить</button>
+            </div>
+            <div id="crop-hint" class="form-text" style="display:none;">После обрезки просто нажмите “Сохранить”.</div>
+          </div>
+
+          <div class="text-center">
+            <button class="btn btn-success px-4">Сохранить</button>
+            <a href="{% url 'player_detail' player.pk %}" class="btn btn-secondary px-4">Отмена</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+<script>
+(function () {
+  const input = document.getElementById("id_photo");
+  const img = document.getElementById("crop-image");
+  const btnCrop = document.getElementById("btn-crop");
+  const btnReset = document.getElementById("btn-reset");
+  const photoData = document.getElementById("photo_data");
+  const hint = document.getElementById("crop-hint");
+  let cropper = null;
+
+  if (!input) return;
+
+  input.addEventListener("change", (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      img.src = reader.result;
+      img.style.display = "block";
+      hint.style.display = "block";
+      btnCrop.style.display = "inline-block";
+      btnReset.style.display = "inline-block";
+      if (cropper) { cropper.destroy(); }
+      cropper = new Cropper(img, {
+        aspectRatio: 4 / 3,
+        viewMode: 1,
+        autoCropArea: 1,
+      });
+    };
+    reader.readAsDataURL(file);
+  });
+
+  btnCrop.addEventListener("click", () => {
+    if (!cropper) return;
+    const canvas = cropper.getCroppedCanvas({ width: 1200, height: 900 });
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+    photoData.value = dataUrl;
+    img.src = dataUrl;
+  });
+
+  btnReset.addEventListener("click", () => {
+    if (cropper) { cropper.destroy(); cropper = null; }
+    img.style.display = "none";
+    btnCrop.style.display = "none";
+    btnReset.style.display = "none";
+    hint.style.display = "none";
+    photoData.value = "";
+    input.value = "";
+  });
+})();
+</script>
+{% endblock %}

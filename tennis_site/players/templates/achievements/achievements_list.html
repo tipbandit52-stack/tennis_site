@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Достижения{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2>Достижения 🏅</h2>
+  <a class="btn btn-success" href="{% url 'achievement_add' %}">+ Добавить достижение</a>
+</div>
+
+<div class="row g-3">
+  {% for a in achievements %}
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100">
+        {% if a.photo %}
+          <img src="{{ a.photo.url }}" class="card-img-top" style="object-fit:cover;height:220px" alt="{{ a }}">
+        {% endif %}
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">{{ a.title }}</h5>
+          <p><strong>Игрок:</strong> {{ a.player.first_name }} {{ a.player.last_name }}</p>
+          <p><strong>Дата:</strong> {{ a.date }}</p>
+          <p>{{ a.description|truncatewords:15 }}</p>
+          <div class="mt-auto d-flex gap-2">
+            <a class="btn btn-outline-secondary btn-sm" href="{% url 'achievement_detail' a.pk %}">Открыть</a>
+            <a class="btn btn-primary btn-sm" href="{% url 'achievement_edit' a.pk %}">Редактировать</a>
+            <a class="btn btn-danger btn-sm" href="{% url 'achievement_delete' a.pk %}">Удалить</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% empty %}
+    <p>Пока достижений нет.</p>
+  {% endfor %}
+</div>
+{% endblock %}

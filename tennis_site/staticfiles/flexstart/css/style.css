@@ -1,0 +1,249 @@
+/* =========================================================
+   🔹 Анимации и базовые эффекты
+   ========================================================= */
+.fade-in { animation: fadeIn .4s ease-in-out; }
+@keyframes fadeIn { 
+  from { opacity:0; transform:translateY(6px) } 
+  to   { opacity:1; transform:translateY(0) } 
+}
+
+.fade-soft { animation: filtersIn .45s cubic-bezier(.22,1,.36,1); }
+@keyframes filtersIn {
+  from { opacity:0; transform:translateY(14px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* Плавное появление/исчезание collapse */
+.collapse:not(.show) { display: none; }
+.collapse.show {
+  display: block;
+  opacity: 1;
+  transition: opacity .35s ease, transform .35s ease;
+}
+
+/* Карточки (hover-эффект) */
+.card:hover { transform: translateY(-2px); transition: transform .15s ease; }
+.card .actions a { margin-right: .4rem; }
+
+/* Широкая главная кнопка (например "Начать") */
+.main-btn {
+  background:#0d6efd; color:#fff!important; font-size:1.1rem;
+  padding:.75rem; border-radius:8px; width:250px; max-width:100%;
+  display:block; margin:.75rem auto 0; transition:.2s;
+}
+.main-btn:hover { background:#0b5ed7; color:#fff!important; }
+
+/* Вспомогательные утилиты */
+.w-150 { width:150px; }
+
+/* =========================================================
+   🔹 Игроки, достижения, профиль
+   ========================================================= */
+.player-card,.achievement-card { font-size:.85rem; max-width:220px; margin:0 auto; }
+.player-photo { width:100%; height:150px; object-fit:cover; border-radius:6px; }
+.achievement-photo { width:100%; aspect-ratio:4/3; object-fit:cover; border-radius:6px; }
+.achievement-description {
+  font-size:.8rem;
+  max-height:3.6em;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  word-wrap:break-word;
+  overflow-wrap:anywhere;
+}
+.profile-photo {
+  width:300px; max-width:100%;
+  aspect-ratio:4/3;
+  object-fit:contain;
+  border-radius:8px;
+  display:block;
+  margin-bottom:1rem;
+}
+
+/* =========================================================
+   🔹 Друзья и чат
+   ========================================================= */
+.avatar { width:64px; height:64px; object-fit:cover; }
+.list-group-item { padding-top:.85rem; padding-bottom:.85rem; }
+
+.chat-row {
+  border-radius:10px;
+  border:1px solid rgba(0,0,0,.05);
+  transition:background-color .15s, box-shadow .15s;
+}
+.chat-row:hover {
+  background:rgba(0,0,0,.02);
+  box-shadow:0 2px 10px rgba(0,0,0,.05);
+}
+
+/* Активная вкладка (Мои друзья, Входящие, Исходящие) */
+.nav-tabs .nav-link.active {
+  background:#212529;
+  color:#fff;
+  border-color:#212529 #212529 #fff;
+}
+
+/* Кнопки управления друзьями */
+.friend-actions {
+  display: flex;
+  justify-content: flex-end; /* справа на ПК */
+  align-items: center;
+  gap: .5rem;
+  flex-wrap: nowrap;
+  width: auto;
+}
+.friend-actions .btn {
+  min-width: 110px; /* одинаковая ширина */
+  text-align: center;
+}
+/* Если кнопка одна (например "Удалить") */
+.friend-actions .btn:only-child {
+  min-width: 160px;
+  margin: 0 auto;
+  display: block;
+}
+
+/* =========================================================
+   🔹 Турниры — фильтры
+   ========================================================= */
+.filter-card { border-radius:14px; }
+.filter-card .form-label { font-weight:600; }
+.filter-card .form-control,
+.filter-card .form-select,
+.filter-card .btn { height:44px; }
+
+/* Кнопки выбора (уровни, форматы турниров) */
+.btn-choice {
+  width:100%;
+  min-width:72px;
+  border-width:1.5px;
+  border-radius:10px;
+  padding:.5rem .75rem;
+  font-weight:600;
+  line-height:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.chip { position:relative; min-width:0; }
+.chip input.btn-check { position:absolute; inset:auto; }
+.chip .btn-choice { height:44px; }
+
+/* Сетка форматов (например: одиночка, парный и т.п.) */
+.filter-grid--formats {
+  display:grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap:.5rem;
+}
+
+/* Сетка уровней (NTRP и др.) */
+.filter-grid--levels {
+  display:grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap:.5rem;
+}
+@media (max-width: 992px) {
+  .filter-grid--levels { grid-template-columns: repeat(3, minmax(0,1fr)); }
+}
+@media (max-width: 576px) {
+  .filter-grid--levels { grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+
+.btn-xl { min-width:140px; padding:.6rem 1rem; border-radius:10px; }
+
+/* =========================================================
+   🔹 Турнир — страница детали (кнопки сверху)
+   ========================================================= */
+.btn-group-gap>* { margin-right:.5rem }
+.btn-group-gap>*:last-child { margin-right:0 }
+
+.btn-eq {
+  min-width:190px;
+  height:44px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.btn-eq-select {
+  min-width:110px;
+  height:44px;
+  display:inline-flex;
+  align-items:center;
+}
+
+/* На мобилках — кнопки идут в столбик */
+@media (max-width:576px) {
+  .btn-group-gap { flex-direction:column; align-items:stretch }
+  .btn-group-gap>* { margin-right:0 }
+  .btn-eq,.btn-eq-select { width:100% }
+}
+
+/* =========================================================
+   🔹 Глобальные адаптивные правки
+   ========================================================= */
+@media (max-width:768px) {
+  .container { padding-left:10px; padding-right:10px; }
+  .player-card,.achievement-card { max-width:100%; }
+  .player-photo,.achievement-photo { height:200px; }
+  #chat-box { max-height:300px!important; }
+  #chat-form { flex-direction:column; }
+  #chat-form input { margin-bottom:.5rem; width:100%; }
+  #chat-form button { width:100%; }
+  .main-btn { width:100%; }
+}
+
+/* =========================================================
+   🔹 Навигация (меню сверху)
+   ========================================================= */
+.navbar-nav .nav-item {
+  width: auto;
+  text-align: center;
+}
+
+.logout-item form { display: block; margin: 0; }
+
+.logout-item .btn-logout {
+  border: none;
+  background: none;
+  color: rgba(255,255,255,.55);
+  padding: .5rem 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+  text-align: center;
+}
+.logout-item .btn-logout:hover {
+  color: #fff;
+  text-decoration: none;
+}
+
+/* На телефонах все пункты меню на всю ширину */
+@media (max-width: 991px) {
+  .navbar-nav .nav-item { width: 100%; }
+  .logout-item .btn-logout {
+    width: 100%;
+    display: block;
+  }
+}
+
+/* =========================================================
+   🔹 Мобильные правки для друзей
+   ========================================================= */
+@media (max-width: 576px) {
+  .list-group-item.d-flex {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: .75rem;
+  }
+  .friend-actions {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* две кнопки в ряд */
+    gap: .5rem;
+    width: 100%;
+  }
+  .friend-actions .btn { width: 100%; }
+  .friend-actions .btn:only-child { grid-column: span 2; }
+}

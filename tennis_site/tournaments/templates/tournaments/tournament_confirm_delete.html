@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Удалить турнир{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-body text-center">
+    <h3 class="mb-3">Удалить турнир «{{ object.name }}»?</h3>
+    <p class="text-muted">📍 {{ object.location }} • 📅 {{ object.date }} {{ object.time }}</p>
+    <form method="post">
+      {% csrf_token %}
+      <button class="btn btn-outline-danger">Удалить</button>
+      <a href="{% url 'tournaments:tournaments_list' %}" class="btn btn-dark ms-2">Отмена</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

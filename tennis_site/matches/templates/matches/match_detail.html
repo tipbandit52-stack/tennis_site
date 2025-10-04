@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Матч{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h3 class="mb-2">{{ match.player1 }} vs {{ match.player2|default:"(ожидается)" }}</h3>
+    <p class="mb-1">📅 {{ match.date }} {{ match.time }}</p>
+    <p class="mb-1">📍 {{ match.location }}</p>
+    <p class="mb-3">
+      Статус: {{ match.get_status_display }}
+      {% if match.score %}, счёт: {{ match.score }}{% endif %}
+    </p>
+
+    <div class="d-flex gap-2">
+      <a href="{% url 'match_list' %}" class="btn btn-outline-dark btn-sm">Назад</a>
+
+      {% if user.is_authenticated %}
+        {# Присоединиться, если матч открыт и игрок не создатель #}
+        {% if match.is_open and match.player1 != user.player_profile %}
+          <form method="post" action="{% url 'join_match' match.pk %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success btn-sm">✅ Присоединиться</button>
+          </form>
+        {% endif %}
+
+        {# Редактировать, если это создатель матча #}
+        {% if match.player1 == user.player_profile %}
+          <a href="{% url 'match_edit' match.pk %}" class="btn btn-dark btn-sm">✏️ Редактировать</a>
+        {% endif %}
+
+        {# Выйти, если это присоединившийся игрок #}
+        {% if match.player2 == user.player_profile %}
+          <form method="post" action="{% url 'leave_match' match.pk %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-danger btn-sm">🚪 Выйти из матча</button>
+          </form>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

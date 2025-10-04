@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Группа {{ group.code }}{% endblock %}
+
+{% block content %}
+<h3 class="mb-3">Группа {{ group.code }} — {{ group.tournament }}</h3>
+
+<div class="row g-3">
+  <div class="col-12 col-lg-6">
+    <div class="card h-100">
+      <div class="card-header">Таблица</div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-striped mb-0">
+            <thead>
+              <tr>
+                <th>Игрок</th>
+                <th class="text-center">W</th>
+                <th class="text-center">L</th>
+                <th class="text-center">PF</th>
+                <th class="text-center">PA</th>
+                <th class="text-center">+/-</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in table %}
+              <tr>
+                <td><a href="{% url 'player_detail' row.player.pk %}">{{ row.player }}</a></td>
+                <td class="text-center">{{ row.w }}</td>
+                <td class="text-center">{{ row.l }}</td>
+                <td class="text-center">{{ row.pf }}</td>
+                <td class="text-center">{{ row.pa }}</td>
+                <td class="text-center">{{ row.diff }}</td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="6" class="text-muted">Нет данных</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="p-2 text-muted small">Таблица пересчитывается автоматически после ввода счёта.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-6">
+    <div class="card h-100">
+      <div class="card-header">Матчи группы</div>
+      <div class="list-group list-group-flush">
+        {% for m in group.matches.all %}
+        <div class="list-group-item">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>{{ m.p1 }} vs {{ m.p2 }}</div>
+
+            {% if user == group.tournament.creator or user.is_superuser %}
+            <form class="d-flex gap-2 align-items-center" method="post" action="{% url 'tournaments:group_set_score' m.pk %}">
+              {% csrf_token %}
+              <input type="number" name="p1_score" class="form-control form-control-sm" placeholder="P1" min="0" value="{{ m.p1_score|default:'' }}" style="max-width:80px">
+              <input type="number" name="p2_score" class="form-control form-control-sm" placeholder="P2" min="0" value="{{ m.p2_score|default:'' }}" style="max-width:80px">
+              <button class="btn btn-sm btn-dark">OK</button>
+            </form>
+            {% else %}
+              {% if m.p1_score is not None and m.p2_score is not None %}
+                <span class="text-muted small">{{ m.p1_score }} : {{ m.p2_score }}</span>
+              {% else %}
+                <span class="text-muted small">без счёта</span>
+              {% endif %}
+            {% endif %}
+          </div>
+        </div>
+        {% empty %}
+        <div class="list-group-item text-muted">Пока нет матчей</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
