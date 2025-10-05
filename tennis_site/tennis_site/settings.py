@@ -14,23 +14,22 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # --- Core ---
 SECRET_KEY = os.getenv('SECRET_KEY', 'замени-на-секретный-ключ')
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
 
-# --- CSRF / Cookies ---
-CSRF_TRUSTED_ORIGINS = [
-    "http://127.0.0.1:8000",
-    "http://localhost:8000",
+# --- ALLOWED HOSTS ---
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
     "tennis-site.onrender.com",
     "litetennis.kz",
     "www.litetennis.kz",
 ]
 
+# --- CSRF / Cookies ---
 CSRF_TRUSTED_ORIGINS = [
     "https://tennis-site.onrender.com",
     "https://litetennis.kz",
     "https://www.litetennis.kz",
 ]
-
 SESSION_COOKIE_SAMESITE = None
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
@@ -98,7 +97,7 @@ CHANNEL_LAYERS = {
     "default": {"BACKEND": "channels.layers.InMemoryChannelLayer"},
 }
 
-# --- DB ---
+# --- Database ---
 DATABASES = {
     'default': dj_database_url.config(
         default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
@@ -126,7 +125,7 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# --- Media (локально не используется бэкендом Cloudinary, но оставим дефолт) ---
+# --- Media ---
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
@@ -134,18 +133,18 @@ MEDIA_ROOT = BASE_DIR / 'media'
 CLOUDINARY_URL = os.getenv("CLOUDINARY_URL")  # формат: cloudinary://API_KEY:API_SECRET@CLOUD_NAME
 if CLOUDINARY_URL and CLOUDINARY_URL.startswith("cloudinary://"):
     cloudinary.config(cloudinary_url=CLOUDINARY_URL, secure=True)
-    # основной бэкенд для ImageField/FileField
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    print("✅ Cloudinary успешно сконфигурирован.")
 else:
-    # фолбэк на локальные файлы, если переменной нет или испорчена
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+    print("⚠️ Cloudinary не настроен, используется локальное хранилище.")
 
 # --- Auth redirects ---
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'my_profile'
 LOGOUT_REDIRECT_URL = 'index'
 
-# --- API key ---
+# --- API Key ---
 UNIVERSAL_API_KEY = os.getenv('UNIVERSAL_API_KEY', 'super-secret-key-123')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
