@@ -1,4 +1,3 @@
-# tennis_site/players/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
@@ -6,23 +5,17 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.core.files.base import ContentFile
-
 import base64, uuid, re
 
 from .models import Player, Achievement
 from .forms import PlayerForm, AchievementForm, PlayerProfileForm, PlayerFilterForm
 
 
-# ========= helpers =========
 def _decode_base64_image(data_url: str):
-    """
-    Принимает строку вида 'data:image/jpeg;base64,....'
-    Возвращает ContentFile с УНИКАЛЬНЫМ именем или None.
-    """
+    """Преобразует base64-данные (data:image/png;base64,...) в ContentFile"""
     if not data_url or not data_url.startswith("data:image"):
         return None
     try:
-        # data:[mime];base64,<data>
         match = re.match(r"^data:(image\/[a-zA-Z0-9.+-]+);base64,(.*)$", data_url)
         if not match:
             return None
@@ -34,22 +27,15 @@ def _decode_base64_image(data_url: str):
             "image/webp": "webp",
         }.get(mime, "jpg")
         raw = base64.b64decode(b64data)
-        unique_name = f"{uuid.uuid4().hex}.{ext}"
-        return ContentFile(raw, name=unique_name)
+        return ContentFile(raw, name=f"{uuid.uuid4().hex}.{ext}")
     except Exception:
         return None
 
 
-# =========================
-# Главная страница
-# =========================
 def index(request):
     return render(request, "index.html")
 
 
-# =========================
-# Список игроков с фильтрацией
-# =========================
 class PlayerListView(ListView):
     model = Player
     template_name = "players/players_list.html"
@@ -67,9 +53,7 @@ class PlayerListView(ListView):
             address = form.cleaned_data.get("address")
 
             if name:
-                queryset = queryset.filter(
-                    Q(first_name__icontains=name) | Q(last_name__icontains=name)
-                )
+                queryset = queryset.filter(Q(first_name__icontains=name) | Q(last_name__icontains=name))
             if min_age:
                 queryset = queryset.filter(age__gte=min_age)
             if max_age:
@@ -87,9 +71,6 @@ class PlayerListView(ListView):
         return context
 
 
-# =========================
-# Создание профиля
-# =========================
 @login_required
 def create_player_profile(request):
     if hasattr(request.user, "player_profile") and request.user.player_profile:
@@ -101,11 +82,10 @@ def create_player_profile(request):
             player = form.save(commit=False)
             player.user = request.user
 
-            # если прислали обрезанное фото (base64)
             photo_data = request.POST.get("photo_data")
             cropped = _decode_base64_image(photo_data)
             if cropped:
-                player.photo = cropped  # имя уже уникальное
+                player.photo = cropped
 
             player.save()
             messages.success(request, "Профиль успешно создан!")
@@ -118,15 +98,9 @@ def create_player_profile(request):
             initial["last_name"] = request.user.last_name
         form = PlayerProfileForm(initial=initial)
 
-    return render(request, "players/player_profile_form.html", {
-        "form": form,
-        "edit_mode": False,
-    })
+    return render(request, "players/player_profile_form.html", {"form": form, "edit_mode": False})
 
 
-# =========================
-# Редактирование профиля
-# =========================
 @login_required
 def edit_my_player_profile(request):
     player = getattr(request.user, "player_profile", None)
@@ -141,7 +115,7 @@ def edit_my_player_profile(request):
             photo_data = request.POST.get("photo_data")
             cropped = _decode_base64_image(photo_data)
             if cropped:
-                player.photo = cropped  # имя уже уникальное
+                player.photo = cropped
 
             player.save()
             messages.success(request, "Профиль успешно обновлён!")
@@ -149,15 +123,9 @@ def edit_my_player_profile(request):
     else:
         form = PlayerProfileForm(instance=player)
 
-    return render(request, "players/player_profile_form.html", {
-        "form": form,
-        "edit_mode": True,
-    })
+    return render(request, "players/player_profile_form.html", {"form": form, "edit_mode": True})
 
 
-# =========================
-# Мой профиль (редирект на detail)
-# =========================
 @login_required
 def my_profile(request):
     player = getattr(request.user, "player_profile", None)
@@ -166,9 +134,6 @@ def my_profile(request):
     return redirect("player_detail", pk=player.pk)
 
 
-# =========================
-# Профиль игрока
-# =========================
 class PlayerDetailView(DetailView):
     model = Player
     template_name = "players/player_detail.html"
@@ -194,32 +159,6 @@ class PlayerDetailView(DetailView):
         return context
 
 
-# =========================
-# CRUD для Player
-# =========================
-class PlayerCreateView(CreateView):
-    model = Player
-    form_class = PlayerForm
-    template_name = "players/player_form.html"
-    success_url = reverse_lazy("players_list")
-
-
-class PlayerUpdateView(UpdateView):
-    model = Player
-    form_class = PlayerForm
-    template_name = "players/player_form.html"
-    success_url = reverse_lazy("players_list")
-
-
-class PlayerDeleteView(DeleteView):
-    model = Player
-    template_name = "players/player_confirm_delete.html"
-    success_url = reverse_lazy("players_list")
-
-
-# =========================
-# Достижения
-# =========================
 @login_required
 def add_achievement(request, pk):
     player = get_object_or_404(Player, pk=pk)
@@ -236,7 +175,7 @@ def add_achievement(request, pk):
             photo_data = request.POST.get("photo_data")
             cropped = _decode_base64_image(photo_data)
             if cropped:
-                ach.photo = cropped  # имя уже уникальное
+                ach.photo = cropped
 
             ach.save()
             messages.success(request, "Достижение добавлено!")
@@ -244,10 +183,7 @@ def add_achievement(request, pk):
     else:
         form = AchievementForm()
 
-    return render(request, "achievements/achievement_form.html", {
-        "form": form,
-        "player": player
-    })
+    return render(request, "achievements/achievement_form.html", {"form": form, "player": player})
 
 
 @login_required
@@ -262,29 +198,22 @@ def edit_achievement(request, pk):
             photo_data = request.POST.get("photo_data")
             cropped = _decode_base64_image(photo_data)
             if cropped:
-                ach.photo = cropped  # имя уже уникальное
+                ach.photo = cropped
 
             ach.save()
+            messages.success(request, "Достижение обновлено!")
             return redirect("player_detail", pk=achievement.player.pk)
     else:
         form = AchievementForm(instance=achievement)
 
-    return render(request, "achievements/achievement_form.html", {
-        "form": form,
-        "edit_mode": True,
-        "player": achievement.player
-    })
+    return render(request, "achievements/achievement_form.html", {"form": form, "edit_mode": True, "player": achievement.player})
 
 
 @login_required
 def delete_achievement(request, pk):
     achievement = get_object_or_404(Achievement, pk=pk, player=request.user.player_profile)
-
     if request.method == "POST":
         achievement.delete()
         messages.success(request, "Достижение удалено!")
         return redirect("player_detail", pk=achievement.player.pk)
-
-    return render(request, "achievements/achievement_confirm_delete.html", {
-        "achievement": achievement
-    })
+    return render(request, "achievements/achievement_confirm_delete.html", {"achievement": achievement})
