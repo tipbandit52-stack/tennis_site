@@ -108,14 +108,33 @@ DATABASES = {
 }
 
 # === Cloudinary ===
-CLOUDINARY_URL = os.getenv("CLOUDINARY_URL")  # cloudinary://API_KEY:API_SECRET@CLOUD_NAME
+from django.core.exceptions import ImproperlyConfigured
+
+CLOUDINARY_URL = os.getenv("CLOUDINARY_URL")
+
 if CLOUDINARY_URL and CLOUDINARY_URL.startswith("cloudinary://"):
-    cloudinary.config(cloudinary_url=CLOUDINARY_URL, secure=True)
-    DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
-    print("✅ Cloudinary успешно сконфигурирован и работает.")
+    try:
+        # Основная настройка
+        cloudinary.config(cloudinary_url=CLOUDINARY_URL, secure=True)
+        print("✅ Cloudinary подключён:", cloudinary.config().cloud_name)
+
+        # Проверим соединение (ping)
+        try:
+            cloudinary.api.ping()
+            print("✅ Cloudinary доступен, используется облачное хранилище.")
+            DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+        except Exception as ping_err:
+            print(f"⚠️ Cloudinary не отвечает ({ping_err}), переключаюсь на локальное хранилище.")
+            DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
+
+    except ImproperlyConfigured as config_err:
+        print(f"⚠️ Ошибка конфигурации Cloudinary: {config_err}")
+        DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
+
 else:
+    print("⚠️ Переменная CLOUDINARY_URL не найдена или некорректна. Используется локальное хранилище.")
     DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
-    print("⚠️ Cloudinary не настроен, используется локальное хранилище.")
+
 
 # === Статические файлы ===
 STATIC_URL = "/static/"
