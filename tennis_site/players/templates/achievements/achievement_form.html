@@ -1,12 +1,10 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}
-  {% if edit_mode %}Редактировать достижение{% else %}Добавить достижение{% endif %}
-{% endblock %}
+{% block title %}{% if edit_mode %}Редактировать достижение{% else %}Добавить достижение{% endif %}{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center fade-in">
+<div class="row justify-content-center">
   <div class="col-lg-8">
     <div class="card shadow-sm">
       <div class="card-body">
@@ -14,25 +12,26 @@
 
         <form method="post" enctype="multipart/form-data">
           {% csrf_token %}
-          <div class="mb-3">{{ form.title.label_tag }} {{ form.title }}</div>
-          <div class="mb-3">{{ form.description.label_tag }} {{ form.description }}</div>
 
-          <!-- Фото -->
+          <div class="mb-3">
+            {{ form.title.label_tag }} {{ form.title }}
+          </div>
+          <div class="mb-3">
+            {{ form.description.label_tag }} {{ form.description }}
+          </div>
+
           <div class="mb-3">
             <label class="form-label">Фото</label>
             {{ form.photo }}
             <input type="hidden" name="photo_data" id="photo_data">
-
-            <div class="mt-3 text-center">
-              <img id="crop-image" class="img-fluid rounded shadow-sm" style="max-width:100%; display:none; transition:0.3s ease;"/>
+            <div class="mt-3">
+              <img id="crop-image" style="max-width:100%; display:none;"/>
             </div>
-
-            <div class="mt-3 d-flex flex-wrap justify-content-center gap-2">
+            <div class="mt-2 d-flex gap-2">
               <button type="button" class="btn btn-warning" id="btn-crop" style="display:none;">✂️ Обрезать (4:3)</button>
               <button type="button" class="btn btn-outline-secondary" id="btn-reset" style="display:none;">Сбросить</button>
             </div>
-
-            <div id="crop-hint" class="form-text text-center" style="display:none;">После обрезки просто нажмите “Сохранить”.</div>
+            <div id="crop-hint" class="form-text" style="display:none;">После обрезки просто нажмите “Сохранить”.</div>
           </div>
 
           <div class="text-center">
@@ -45,19 +44,11 @@
   </div>
 </div>
 
-<!-- === CropperJS === -->
-<link href="{% static 'css/cropper.min.css' %}" rel="stylesheet">
-<script src="{% static 'js/cropper.min.js' %}"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 <script>
-(function ensureCropper(cb){
-  if (window.Cropper) return cb();
-  // fallback на CDN, если локальный файл не загрузился (404/блок)
-  var s = document.createElement('script');
-  s.src = "https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js";
-  s.onload = cb;
-  document.head.appendChild(s);
-})(function initCropper(){
-  const input = document.getElementById("id_photo") || document.querySelector('input[type="file"][name="photo"]');
+(function () {
+  const input = document.getElementById("id_photo");
   const img = document.getElementById("crop-image");
   const btnCrop = document.getElementById("btn-crop");
   const btnReset = document.getElementById("btn-reset");
@@ -65,7 +56,7 @@
   const hint = document.getElementById("crop-hint");
   let cropper = null;
 
-  if (!input || !img) return;
+  if (!input) return;
 
   input.addEventListener("change", (e) => {
     const file = e.target.files && e.target.files[0];
@@ -74,43 +65,36 @@
     reader.onload = () => {
       img.src = reader.result;
       img.style.display = "block";
-      hint && (hint.style.display = "block");
-      btnCrop && (btnCrop.style.display = "inline-block");
-      btnReset && (btnReset.style.display = "inline-block");
-      if (cropper) cropper.destroy();
+      hint.style.display = "block";
+      btnCrop.style.display = "inline-block";
+      btnReset.style.display = "inline-block";
+      if (cropper) { cropper.destroy(); }
       cropper = new Cropper(img, {
         aspectRatio: 4 / 3,
         viewMode: 1,
         autoCropArea: 1,
-        guides: true,     // сетка
-        center: true,     // центр при инициализации
-        highlight: true,  // подсветка края
-        background: true,
-        responsive: true
       });
     };
     reader.readAsDataURL(file);
   });
 
-  btnCrop && btnCrop.addEventListener("click", () => {
+  btnCrop.addEventListener("click", () => {
     if (!cropper) return;
     const canvas = cropper.getCroppedCanvas({ width: 1200, height: 900 });
     const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
-    photoData.value = dataUrl;           // base64 -> уйдёт в POST
-    img.src = dataUrl;                   // показываем предпросмотр
-    cropper.destroy(); cropper = null;   // больше не двигаем рамку
-    btnCrop.style.display = "none";
+    photoData.value = dataUrl;
+    img.src = dataUrl;
   });
 
-  btnReset && btnReset.addEventListener("click", () => {
+  btnReset.addEventListener("click", () => {
     if (cropper) { cropper.destroy(); cropper = null; }
     img.style.display = "none";
-    btnCrop && (btnCrop.style.display = "none");
-    btnReset && (btnReset.style.display = "none");
-    hint && (hint.style.display = "none");
+    btnCrop.style.display = "none";
+    btnReset.style.display = "none";
+    hint.style.display = "none";
     photoData.value = "";
     input.value = "";
   });
-});
+})();
 </script>
 {% endblock %}

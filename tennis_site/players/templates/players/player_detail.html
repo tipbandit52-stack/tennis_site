@@ -1,11 +1,10 @@
 {% extends "base.html" %}
-{% load static %}
 {% block title %}Профиль игрока{% endblock %}
 
 {% block content %}
 <div class="card mb-4 shadow-sm">
   <div class="card-body d-flex flex-wrap gap-3">
-    {% if player.photo and player.photo.url %}
+    {% if player.photo %}
       <img src="{{ player.photo.url }}" alt="Фото игрока" class="profile-photo">
     {% else %}
       <img src="https://via.placeholder.com/300x225?text=Player" alt="Фото игрока" class="profile-photo">
@@ -24,6 +23,7 @@
         {% endif %}
         <a href="{% url 'players_list' %}" class="btn btn-outline-dark btn-sm">Назад к списку</a>
 
+        {# КНОПКИ — если смотрим чужой профиль #}
         {% if user.is_authenticated and user != player.user %}
           <form method="post" action="{% url 'send_friend_request' player.user.id %}" class="d-inline">
             {% csrf_token %}
@@ -42,7 +42,7 @@
     {% for a in achievements %}
       <div class="col-12 col-md-6 col-lg-4">
         <div class="card h-100 shadow-sm">
-          {% if a.photo and a.photo.url %}
+          {% if a.photo %}
             <img src="{{ a.photo.url }}" class="card-img-top" style="height:200px; object-fit:cover;" alt="">
           {% else %}
             <img src="https://via.placeholder.com/600x400?text=Achievement" class="card-img-top" style="height:200px; object-fit:cover;" alt="">
