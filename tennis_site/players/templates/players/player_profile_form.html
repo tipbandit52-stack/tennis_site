@@ -61,10 +61,8 @@
   </div>
 </div>
 
-<!-- Cropper.js -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
-
 <script>
 (function () {
   const input = document.getElementById("id_photo");
@@ -101,8 +99,7 @@
     if (!cropper) return;
     const canvas = cropper.getCroppedCanvas({ width: 1200, height: 900 });
     const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
-    photoData.value = dataUrl; // отправим на сервер как hidden
-    // Покажем превью уже обрезанное
+    photoData.value = dataUrl; // сервер сам создаст уникальное имя
     img.src = dataUrl;
   });
 

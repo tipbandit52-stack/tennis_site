@@ -82,7 +82,7 @@
     if (!cropper) return;
     const canvas = cropper.getCroppedCanvas({ width: 1200, height: 900 });
     const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
-    photoData.value = dataUrl;
+    photoData.value = dataUrl; // сервер сам создаст уникальное имя
     img.src = dataUrl;
   });
 

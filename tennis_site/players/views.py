@@ -7,24 +7,35 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.core.files.base import ContentFile
 
-import base64
+import base64, uuid, re
 
 from .models import Player, Achievement
 from .forms import PlayerForm, AchievementForm, PlayerProfileForm, PlayerFilterForm
 
 
 # ========= helpers =========
-def _decode_base64_image(data_url: str, default_name: str = "photo.jpg"):
+def _decode_base64_image(data_url: str):
     """
     Принимает строку вида 'data:image/jpeg;base64,....'
-    Возвращает ContentFile или None.
+    Возвращает ContentFile с УНИКАЛЬНЫМ именем или None.
     """
     if not data_url or not data_url.startswith("data:image"):
         return None
     try:
-        header, b64data = data_url.split(";base64,")
-        ext = header.split("/")[-1]  # jpeg|png|webp
-        return ContentFile(base64.b64decode(b64data), name=f"cropped.{ext or 'jpg'}")
+        # data:[mime];base64,<data>
+        match = re.match(r"^data:(image\/[a-zA-Z0-9.+-]+);base64,(.*)$", data_url)
+        if not match:
+            return None
+        mime, b64data = match.groups()
+        ext = {
+            "image/jpeg": "jpg",
+            "image/jpg": "jpg",
+            "image/png": "png",
+            "image/webp": "webp",
+        }.get(mime, "jpg")
+        raw = base64.b64decode(b64data)
+        unique_name = f"{uuid.uuid4().hex}.{ext}"
+        return ContentFile(raw, name=unique_name)
     except Exception:
         return None
 
@@ -90,11 +101,11 @@ def create_player_profile(request):
             player = form.save(commit=False)
             player.user = request.user
 
-            # если прислали обрезанное фото
+            # если прислали обрезанное фото (base64)
             photo_data = request.POST.get("photo_data")
             cropped = _decode_base64_image(photo_data)
             if cropped:
-                player.photo = cropped
+                player.photo = cropped  # имя уже уникальное
 
             player.save()
             messages.success(request, "Профиль успешно создан!")
@@ -130,7 +141,7 @@ def edit_my_player_profile(request):
             photo_data = request.POST.get("photo_data")
             cropped = _decode_base64_image(photo_data)
             if cropped:
-                player.photo = cropped
+                player.photo = cropped  # имя уже уникальное
 
             player.save()
             messages.success(request, "Профиль успешно обновлён!")
@@ -225,7 +236,7 @@ def add_achievement(request, pk):
             photo_data = request.POST.get("photo_data")
             cropped = _decode_base64_image(photo_data)
             if cropped:
-                ach.photo = cropped
+                ach.photo = cropped  # имя уже уникальное
 
             ach.save()
             messages.success(request, "Достижение добавлено!")
@@ -251,7 +262,7 @@ def edit_achievement(request, pk):
             photo_data = request.POST.get("photo_data")
             cropped = _decode_base64_image(photo_data)
             if cropped:
-                ach.photo = cropped
+                ach.photo = cropped  # имя уже уникальное
 
             ach.save()
             return redirect("player_detail", pk=achievement.player.pk)
