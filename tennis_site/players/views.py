@@ -6,24 +6,30 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.core.files.base import ContentFile
-import base64, uuid, re
+from django.core.files.uploadedfile import InMemoryUploadedFile
+import base64, uuid, re, io
+from PIL import Image
 
 from .models import Player, Achievement
 from .forms import PlayerForm, AchievementForm, PlayerProfileForm, PlayerFilterForm
 
 
-# ========= helpers =========
+# ================================================================
+# 🔧 Декодирование base64 в Cloudinary-совместимый файл
+# ================================================================
 def _decode_base64_image(data_url: str):
     """
-    Принимает строку вида 'data:image/jpeg;base64,....'
-    Возвращает ContentFile с уникальным именем.
+    Принимает строку вида 'data:image/jpeg;base64,...'
+    Возвращает InMemoryUploadedFile для загрузки в Cloudinary.
     """
     if not data_url or not data_url.startswith("data:image"):
         return None
+
     try:
         match = re.match(r"^data:(image\/[a-zA-Z0-9.+-]+);base64,(.*)$", data_url)
         if not match:
             return None
+
         mime, b64data = match.groups()
         ext = {
             "image/jpeg": "jpg",
@@ -33,24 +39,33 @@ def _decode_base64_image(data_url: str):
         }.get(mime, "jpg")
 
         raw = base64.b64decode(b64data)
-        unique_name = f"{uuid.uuid4().hex}.{ext}"
-        print(f"[INFO] Base64 decode: успешное создание файла {unique_name}")
-        return ContentFile(raw, name=unique_name)
+        unique_name = f"cropped_{uuid.uuid4().hex}.{ext}"
+
+        # ✅ Создаём in-memory файл (чтобы Cloudinary мог принять)
+        img = Image.open(io.BytesIO(raw))
+        buffer = io.BytesIO()
+        img.save(buffer, format=img.format or "JPEG")
+        buffer.seek(0)
+
+        return InMemoryUploadedFile(
+            buffer, None, unique_name, mime, buffer.getbuffer().nbytes, None
+        )
+
     except Exception as e:
-        print(f"[ERROR] Ошибка декодирования base64: {e}")
+        print(f"⚠️ Ошибка декодирования base64: {e}")
         return None
 
 
-# =========================
+# ================================================================
 # Главная страница
-# =========================
+# ================================================================
 def index(request):
     return render(request, "index.html")
 
 
-# =========================
-# Список игроков с фильтрацией
-# =========================
+# ================================================================
+# Список игроков
+# ================================================================
 class PlayerListView(ListView):
     model = Player
     template_name = "players/players_list.html"
@@ -68,9 +83,7 @@ class PlayerListView(ListView):
             address = form.cleaned_data.get("address")
 
             if name:
-                queryset = queryset.filter(
-                    Q(first_name__icontains=name) | Q(last_name__icontains=name)
-                )
+                queryset = queryset.filter(Q(first_name__icontains=name) | Q(last_name__icontains=name))
             if min_age:
                 queryset = queryset.filter(age__gte=min_age)
             if max_age:
@@ -83,14 +96,14 @@ class PlayerListView(ListView):
         return queryset
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["form"] = PlayerFilterForm(self.request.GET or None)
-        return context
+        ctx = super().get_context_data(**kwargs)
+        ctx["form"] = PlayerFilterForm(self.request.GET or None)
+        return ctx
 
 
-# =========================
-# Создание профиля
-# =========================
+# ================================================================
+# Создание профиля игрока
+# ================================================================
 @login_required
 def create_player_profile(request):
     if hasattr(request.user, "player_profile") and request.user.player_profile:
@@ -102,18 +115,18 @@ def create_player_profile(request):
             player = form.save(commit=False)
             player.user = request.user
 
-            # обработка обрезанного фото
             photo_data = request.POST.get("photo_data")
             cropped = _decode_base64_image(photo_data)
             if cropped:
-                print("[DEBUG] Обрезанное фото получено, сохраняем в Cloudinary…")
-                player.photo.save(cropped.name, cropped, save=False)
+                player.photo = cropped
 
-            player.save()
-            messages.success(request, "Профиль успешно создан!")
-            return redirect("my_profile")
-        else:
-            print("[ERROR] Ошибка в форме профиля:", form.errors)
+            try:
+                player.save()
+                messages.success(request, "Профиль успешно создан!")
+                return redirect("my_profile")
+            except Exception as e:
+                print("⚠️ Ошибка сохранения профиля:", e)
+                messages.error(request, "Ошибка при сохранении профиля.")
     else:
         initial = {}
         if request.user.first_name:
@@ -122,15 +135,12 @@ def create_player_profile(request):
             initial["last_name"] = request.user.last_name
         form = PlayerProfileForm(initial=initial)
 
-    return render(request, "players/player_profile_form.html", {
-        "form": form,
-        "edit_mode": False,
-    })
+    return render(request, "players/player_profile_form.html", {"form": form, "edit_mode": False})
 
 
-# =========================
-# Редактирование профиля
-# =========================
+# ================================================================
+# Редактирование профиля игрока
+# ================================================================
 @login_required
 def edit_my_player_profile(request):
     player = getattr(request.user, "player_profile", None)
@@ -145,26 +155,24 @@ def edit_my_player_profile(request):
             photo_data = request.POST.get("photo_data")
             cropped = _decode_base64_image(photo_data)
             if cropped:
-                print("[DEBUG] Фото обновлено, отправляем на Cloudinary…")
-                player.photo.save(cropped.name, cropped, save=False)
+                player.photo = cropped
 
-            player.save()
-            messages.success(request, "Профиль успешно обновлён!")
-            return redirect("my_profile")
-        else:
-            print("[ERROR] Ошибка обновления профиля:", form.errors)
+            try:
+                player.save()
+                messages.success(request, "Профиль обновлён!")
+                return redirect("my_profile")
+            except Exception as e:
+                print("⚠️ Ошибка сохранения профиля:", e)
+                messages.error(request, "Не удалось сохранить изменения.")
     else:
         form = PlayerProfileForm(instance=player)
 
-    return render(request, "players/player_profile_form.html", {
-        "form": form,
-        "edit_mode": True,
-    })
+    return render(request, "players/player_profile_form.html", {"form": form, "edit_mode": True})
 
 
-# =========================
-# Мой профиль (редирект на detail)
-# =========================
+# ================================================================
+# Просмотр собственного профиля
+# ================================================================
 @login_required
 def my_profile(request):
     player = getattr(request.user, "player_profile", None)
@@ -173,37 +181,35 @@ def my_profile(request):
     return redirect("player_detail", pk=player.pk)
 
 
-# =========================
-# Профиль игрока
-# =========================
+# ================================================================
+# Деталка игрока
+# ================================================================
 class PlayerDetailView(DetailView):
     model = Player
     template_name = "players/player_detail.html"
     context_object_name = "player"
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["achievements"] = self.object.achievements.all().order_by("-date")
-
+        ctx = super().get_context_data(**kwargs)
+        ctx["achievements"] = self.object.achievements.all().order_by("-date")
         my_user = self.request.user
         if my_user.is_authenticated:
             from friends.models import Friendship
-            friendships = Friendship.objects.filter(
-                Q(from_player=my_user, to_player=self.object.user) |
-                Q(from_player=self.object.user, to_player=my_user)
+            ctx["friendships"] = Friendship.objects.filter(
+                Q(from_player=my_user, to_player=self.object.user)
+                | Q(from_player=self.object.user, to_player=my_user)
             )
-            context["friendships"] = friendships
         else:
-            context["friendships"] = None
+            ctx["friendships"] = None
 
         my_profile = getattr(my_user, "player_profile", None)
-        context["can_invite_to_match"] = (my_profile is not None and my_profile != self.object)
-        return context
+        ctx["can_invite_to_match"] = (my_profile is not None and my_profile != self.object)
+        return ctx
 
 
-# =========================
-# CRUD для Player (если нужно отдельно)
-# =========================
+# ================================================================
+# CRUD Player
+# ================================================================
 class PlayerCreateView(CreateView):
     model = Player
     form_class = PlayerForm
@@ -224,9 +230,9 @@ class PlayerDeleteView(DeleteView):
     success_url = reverse_lazy("players_list")
 
 
-# =========================
+# ================================================================
 # Достижения
-# =========================
+# ================================================================
 @login_required
 def add_achievement(request, pk):
     player = get_object_or_404(Player, pk=pk)
@@ -243,21 +249,19 @@ def add_achievement(request, pk):
             photo_data = request.POST.get("photo_data")
             cropped = _decode_base64_image(photo_data)
             if cropped:
-                print("[DEBUG] Добавляем фото достижения в Cloudinary…")
-                ach.photo.save(cropped.name, cropped, save=False)
+                ach.photo = cropped
 
-            ach.save()
-            messages.success(request, "Достижение добавлено!")
-            return redirect("player_detail", pk=pk)
-        else:
-            print("[ERROR] Ошибка добавления достижения:", form.errors)
+            try:
+                ach.save()
+                messages.success(request, "Достижение добавлено!")
+                return redirect("player_detail", pk=pk)
+            except Exception as e:
+                print("⚠️ Ошибка сохранения достижения:", e)
+                messages.error(request, "Ошибка при добавлении достижения.")
     else:
         form = AchievementForm()
 
-    return render(request, "achievements/achievement_form.html", {
-        "form": form,
-        "player": player
-    })
+    return render(request, "achievements/achievement_form.html", {"form": form, "player": player})
 
 
 @login_required
@@ -272,21 +276,22 @@ def edit_achievement(request, pk):
             photo_data = request.POST.get("photo_data")
             cropped = _decode_base64_image(photo_data)
             if cropped:
-                print("[DEBUG] Обновляем фото достижения на Cloudinary…")
-                ach.photo.save(cropped.name, cropped, save=False)
+                ach.photo = cropped
 
-            ach.save()
-            messages.success(request, "Достижение обновлено!")
-            return redirect("player_detail", pk=achievement.player.pk)
-        else:
-            print("[ERROR] Ошибка редактирования достижения:", form.errors)
+            try:
+                ach.save()
+                messages.success(request, "Изменения сохранены!")
+                return redirect("player_detail", pk=achievement.player.pk)
+            except Exception as e:
+                print("⚠️ Ошибка сохранения достижения:", e)
+                messages.error(request, "Ошибка при сохранении достижения.")
     else:
         form = AchievementForm(instance=achievement)
 
     return render(request, "achievements/achievement_form.html", {
         "form": form,
         "edit_mode": True,
-        "player": achievement.player
+        "player": achievement.player,
     })
 
 
@@ -299,6 +304,4 @@ def delete_achievement(request, pk):
         messages.success(request, "Достижение удалено!")
         return redirect("player_detail", pk=achievement.player.pk)
 
-    return render(request, "achievements/achievement_confirm_delete.html", {
-        "achievement": achievement
-    })
+    return render(request, "achievements/achievement_confirm_delete.html", {"achievement": achievement})
