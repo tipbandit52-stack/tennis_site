@@ -49,8 +49,15 @@
 <link href="{% static 'css/cropper.min.css' %}" rel="stylesheet">
 <script src="{% static 'js/cropper.min.js' %}"></script>
 <script>
-(function() {
-  const input = document.querySelector('input[type="file"][name="photo"]');
+(function ensureCropper(cb){
+  if (window.Cropper) return cb();
+  // fallback на CDN, если локальный файл не загрузился (404/блок)
+  var s = document.createElement('script');
+  s.src = "https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js";
+  s.onload = cb;
+  document.head.appendChild(s);
+})(function initCropper(){
+  const input = document.getElementById("id_photo") || document.querySelector('input[type="file"][name="photo"]');
   const img = document.getElementById("crop-image");
   const btnCrop = document.getElementById("btn-crop");
   const btnReset = document.getElementById("btn-reset");
@@ -58,51 +65,51 @@
   const hint = document.getElementById("crop-hint");
   let cropper = null;
 
-  if (!input) return;
+  if (!input || !img) return;
 
   input.addEventListener("change", (e) => {
-    const file = e.target.files?.[0];
+    const file = e.target.files && e.target.files[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = () => {
       img.src = reader.result;
       img.style.display = "block";
-      hint.style.display = "block";
-      btnCrop.style.display = "inline-block";
-      btnReset.style.display = "inline-block";
-
+      hint && (hint.style.display = "block");
+      btnCrop && (btnCrop.style.display = "inline-block");
+      btnReset && (btnReset.style.display = "inline-block");
       if (cropper) cropper.destroy();
       cropper = new Cropper(img, {
         aspectRatio: 4 / 3,
         viewMode: 1,
         autoCropArea: 1,
+        guides: true,     // сетка
+        center: true,     // центр при инициализации
+        highlight: true,  // подсветка края
+        background: true,
+        responsive: true
       });
     };
     reader.readAsDataURL(file);
   });
 
-  btnCrop.addEventListener("click", () => {
+  btnCrop && btnCrop.addEventListener("click", () => {
     if (!cropper) return;
     const canvas = cropper.getCroppedCanvas({ width: 1200, height: 900 });
     const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
-    photoData.value = dataUrl;
-    img.src = dataUrl;
-    cropper.destroy();
-    cropper = null;
+    photoData.value = dataUrl;           // base64 -> уйдёт в POST
+    img.src = dataUrl;                   // показываем предпросмотр
+    cropper.destroy(); cropper = null;   // больше не двигаем рамку
     btnCrop.style.display = "none";
   });
 
-  btnReset.addEventListener("click", () => {
-    if (cropper) cropper.destroy();
-    cropper = null;
+  btnReset && btnReset.addEventListener("click", () => {
+    if (cropper) { cropper.destroy(); cropper = null; }
     img.style.display = "none";
-    btnCrop.style.display = "none";
-    btnReset.style.display = "none";
-    hint.style.display = "none";
+    btnCrop && (btnCrop.style.display = "none");
+    btnReset && (btnReset.style.display = "none");
+    hint && (hint.style.display = "none");
     photoData.value = "";
     input.value = "";
   });
-})();
+});
 </script>
-{% endblock %}

@@ -6,7 +6,6 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.core.files.base import ContentFile
-
 import base64, uuid, re
 
 from .models import Player, Achievement
@@ -17,12 +16,11 @@ from .forms import PlayerForm, AchievementForm, PlayerProfileForm, PlayerFilterF
 def _decode_base64_image(data_url: str):
     """
     Принимает строку вида 'data:image/jpeg;base64,....'
-    Возвращает ContentFile с УНИКАЛЬНЫМ именем или None.
+    Возвращает ContentFile с уникальным именем.
     """
     if not data_url or not data_url.startswith("data:image"):
         return None
     try:
-        # data:[mime];base64,<data>
         match = re.match(r"^data:(image\/[a-zA-Z0-9.+-]+);base64,(.*)$", data_url)
         if not match:
             return None
@@ -33,10 +31,13 @@ def _decode_base64_image(data_url: str):
             "image/png": "png",
             "image/webp": "webp",
         }.get(mime, "jpg")
+
         raw = base64.b64decode(b64data)
         unique_name = f"{uuid.uuid4().hex}.{ext}"
+        print(f"[INFO] Base64 decode: успешное создание файла {unique_name}")
         return ContentFile(raw, name=unique_name)
-    except Exception:
+    except Exception as e:
+        print(f"[ERROR] Ошибка декодирования base64: {e}")
         return None
 
 
@@ -101,15 +102,18 @@ def create_player_profile(request):
             player = form.save(commit=False)
             player.user = request.user
 
-            # если прислали обрезанное фото (base64)
+            # обработка обрезанного фото
             photo_data = request.POST.get("photo_data")
             cropped = _decode_base64_image(photo_data)
             if cropped:
-                player.photo = cropped  # имя уже уникальное
+                print("[DEBUG] Обрезанное фото получено, сохраняем в Cloudinary…")
+                player.photo.save(cropped.name, cropped, save=False)
 
             player.save()
             messages.success(request, "Профиль успешно создан!")
             return redirect("my_profile")
+        else:
+            print("[ERROR] Ошибка в форме профиля:", form.errors)
     else:
         initial = {}
         if request.user.first_name:
@@ -141,11 +145,14 @@ def edit_my_player_profile(request):
             photo_data = request.POST.get("photo_data")
             cropped = _decode_base64_image(photo_data)
             if cropped:
-                player.photo = cropped  # имя уже уникальное
+                print("[DEBUG] Фото обновлено, отправляем на Cloudinary…")
+                player.photo.save(cropped.name, cropped, save=False)
 
             player.save()
             messages.success(request, "Профиль успешно обновлён!")
             return redirect("my_profile")
+        else:
+            print("[ERROR] Ошибка обновления профиля:", form.errors)
     else:
         form = PlayerProfileForm(instance=player)
 
@@ -195,7 +202,7 @@ class PlayerDetailView(DetailView):
 
 
 # =========================
-# CRUD для Player
+# CRUD для Player (если нужно отдельно)
 # =========================
 class PlayerCreateView(CreateView):
     model = Player
@@ -236,11 +243,14 @@ def add_achievement(request, pk):
             photo_data = request.POST.get("photo_data")
             cropped = _decode_base64_image(photo_data)
             if cropped:
-                ach.photo = cropped  # имя уже уникальное
+                print("[DEBUG] Добавляем фото достижения в Cloudinary…")
+                ach.photo.save(cropped.name, cropped, save=False)
 
             ach.save()
             messages.success(request, "Достижение добавлено!")
             return redirect("player_detail", pk=pk)
+        else:
+            print("[ERROR] Ошибка добавления достижения:", form.errors)
     else:
         form = AchievementForm()
 
@@ -262,10 +272,14 @@ def edit_achievement(request, pk):
             photo_data = request.POST.get("photo_data")
             cropped = _decode_base64_image(photo_data)
             if cropped:
-                ach.photo = cropped  # имя уже уникальное
+                print("[DEBUG] Обновляем фото достижения на Cloudinary…")
+                ach.photo.save(cropped.name, cropped, save=False)
 
             ach.save()
+            messages.success(request, "Достижение обновлено!")
             return redirect("player_detail", pk=achievement.player.pk)
+        else:
+            print("[ERROR] Ошибка редактирования достижения:", form.errors)
     else:
         form = AchievementForm(instance=achievement)
 
