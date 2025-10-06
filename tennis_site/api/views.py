@@ -92,18 +92,42 @@ def match_detail(request, id):
 # ===== Турниры =====
 def tournaments_list(request):
     if not check_access(request):
-        return JsonResponse({"error": "Доступ запрещён: требуется вход или API ключ"}, status=403)
+        return JsonResponse(
+            {"error": "Доступ запрещён: требуется вход или API ключ"},
+            status=403
+        )
 
-    tournaments = Tournament.objects.all().values("id", "name", "start_date", "end_date")
+    tournaments = Tournament.objects.all().values(
+        "id",
+        "name",
+        "date",
+        "time",
+        "location",
+        "status",
+        "format"
+    )
     return JsonResponse(list(tournaments), safe=False)
 
 
 def tournament_detail(request, id):
     if not check_access(request):
-        return JsonResponse({"error": "Доступ запрещён: требуется вход или API ключ"}, status=403)
+        return JsonResponse(
+            {"error": "Доступ запрещён: требуется вход или API ключ"},
+            status=403
+        )
 
     try:
-        t = Tournament.objects.values("id", "name", "start_date", "end_date").get(pk=id)
+        t = Tournament.objects.values(
+            "id",
+            "name",
+            "date",
+            "time",
+            "location",
+            "status",
+            "description",
+            "format"
+        ).get(pk=id)
     except Tournament.DoesNotExist:
         raise Http404("Турнир не найден")
+
     return JsonResponse(t, safe=False)
