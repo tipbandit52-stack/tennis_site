@@ -239,3 +239,12 @@
 body {
   background-color: #ffffff; /* светло-серый */
 }
+
+footer a:hover {
+  text-decoration: underline;
+}
+
+footer .bi {
+  font-size: 1.1rem;
+  vertical-align: middle;
+}

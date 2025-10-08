@@ -235,3 +235,12 @@
     grid-column: span 2;
   }
 }
+
+footer a:hover {
+  text-decoration: underline;
+}
+
+footer .bi {
+  font-size: 1.1rem;
+  vertical-align: middle;
+}

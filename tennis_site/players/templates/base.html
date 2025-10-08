@@ -81,10 +81,45 @@
     {% block content %}{% endblock %}
   </main>
 
-  <!-- Футер -->
-  <footer class="bg-dark text-light py-4">
-    <div class="container text-center">
-      <small>© 2025 Tennis Site. Все права защищены.</small>
+    <!-- Футер -->
+  <footer class="bg-dark text-light py-5 mt-auto">
+    <div class="container">
+      <div class="row text-center text-md-start">
+        <!-- Левая колонка -->
+        <div class="col-md-4 mb-4 mb-md-0">
+          <h5 class="text-uppercase fw-bold mb-3">Tennis Site 🎾</h5>
+          <p class="mb-1">Платформа для теннисистов: турниры, матчи, друзья и достижения.</p>
+          <p class="text-secondary small mb-0">© 2025 Все права защищены.</p>
+          <p class="text-secondary small">Обладатель прав — <strong>Ибдиминов Тимур</strong></p>
+        </div>
+
+        <!-- Средняя колонка -->
+        <div class="col-md-4 mb-4 mb-md-0">
+          <h5 class="text-uppercase fw-bold mb-3">Контакты</h5>
+          <p class="mb-2"><i class="bi bi-telephone-fill me-2"></i><strong>+7 (777) 015-24-99</strong></p>
+          <p class="mb-1"><i class="bi bi-whatsapp me-2 text-success"></i>WhatsApp: <a href="https://wa.me/77770152499" class="text-light text-decoration-none">написать</a></p>
+          <p class="mb-1"><i class="bi bi-telegram me-2 text-info"></i>Telegram: <a href="https://t.me/+77770152499" class="text-light text-decoration-none">связаться</a></p>
+          <p class="text-secondary small mt-2 mb-0">Отвечаю ежедневно с 10:00 до 22:00</p>
+        </div>
+
+        <!-- Правая колонка -->
+        <div class="col-md-4">
+          <h5 class="text-uppercase fw-bold mb-3">Навигация</h5>
+          <ul class="list-unstyled">
+            <li><a href="{% url 'index' %}" class="text-light text-decoration-none">Главная</a></li>
+            <li><a href="{% url 'players_list' %}" class="text-light text-decoration-none">Игроки</a></li>
+            <li><a href="{% url 'tournaments:tournaments_list' %}" class="text-light text-decoration-none">Турниры</a></li>
+            <li><a href="{% url 'friends_list' %}" class="text-light text-decoration-none">Друзья</a></li>
+            <li><a href="{% url 'chat:inbox' %}" class="text-light text-decoration-none">Чат</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <hr class="border-secondary my-4">
+
+      <div class="text-center small text-secondary">
+        Разработано с ❤️ Тимуром Ибдиминовым | Казахстан, 2025
+      </div>
     </div>
   </footer>
 
