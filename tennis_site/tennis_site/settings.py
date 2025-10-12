@@ -12,7 +12,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # === Безопасность ===
 SECRET_KEY = os.getenv("SECRET_KEY", "замени-на-секретный-ключ")
-DEBUG = os.getenv("DEBUG", "False").lower() == "true"
+DEBUG = True 
 
 # === Разрешённые хосты ===
 ALLOWED_HOSTS = [
