@@ -108,32 +108,36 @@ DATABASES = {
 }
 
 # === Cloudinary ===
-from django.core.exceptions import ImproperlyConfigured
+#from django.core.exceptions import ImproperlyConfigured
 
-CLOUDINARY_URL = os.getenv("CLOUDINARY_URL")
+#CLOUDINARY_URL = os.getenv("CLOUDINARY_URL")
 
-if CLOUDINARY_URL and CLOUDINARY_URL.startswith("cloudinary://"):
-    try:
-        # Основная настройка
-        cloudinary.config(cloudinary_url=CLOUDINARY_URL, secure=True)
-        print("✅ Cloudinary подключён:", cloudinary.config().cloud_name)
+#USE_CLOUDINARY = bool(CLOUDINARY_URL and CLOUDINARY_URL.startswith("cloudinary://"))
 
-        # Проверим соединение (ping)
-        try:
-            cloudinary.api.ping()
-            print("✅ Cloudinary доступен, используется облачное хранилище.")
-            DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
-        except Exception as ping_err:
-            print(f"⚠️ Cloudinary не отвечает ({ping_err}), переключаюсь на локальное хранилище.")
-            DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
+#if USE_CLOUDINARY:
+#    try:
+#        cloudinary.config(cloudinary_url=CLOUDINARY_URL, secure=True)
+#        cloudinary.api.ping()  # проверяем подключение
+#        print("✅ Cloudinary работает — все фото будут храниться в облаке.")
+#        DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+#    except Exception as e:
+#        print(f"⚠️ Cloudinary недоступен ({e}), используем локальное хранилище.")
+#        DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
+#else:
+#    print("⚠️ Cloudinary не настроен. Используется локальное хранилище.")
+#    DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
 
-    except ImproperlyConfigured as config_err:
-        print(f"⚠️ Ошибка конфигурации Cloudinary: {config_err}")
-        DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
 
-else:
-    print("⚠️ Переменная CLOUDINARY_URL не найдена или некорректна. Используется локальное хранилище.")
-    DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
+# === Медиа ===
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
+# === Статические файлы ===
+STATIC_URL = "/static/"
+STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+
 
 
 # === Статические файлы ===
