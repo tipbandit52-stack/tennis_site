@@ -194,13 +194,16 @@
   justify-content: flex-end; /* кнопки справа */
   align-items: center;
   gap: .5rem;
-  flex-wrap: nowrap; /* всегда в одну линию */
-  width: auto;
+  flex-wrap: wrap; /* ✅ разрешаем перенос при нехватке ширины */
+  width: 100%;     /* ✅ чтобы контейнер занимал всю ширину карточки */
+  max-width: 100%; /* ✅ чтобы не выходил за рамки */
+  box-sizing: border-box;
 }
 
 .friend-actions .btn {
-  min-width: 110px;  /* одинаковая ширина */
+  min-width: 90px;  /* одинаковая ширина */
   text-align: center;
+  flex: 0 1 auto;   /* ✅ позволяет кнопкам переноситься, но не сжиматься до нечитабельности */
 }
 
 /* Если кнопка одна (например "Удалить") */
