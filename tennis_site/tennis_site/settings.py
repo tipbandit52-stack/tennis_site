@@ -14,7 +14,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # === Безопасность ===
 SECRET_KEY = os.getenv("SECRET_KEY", "замени-на-секретный-ключ")
 # Управлять DEBUG через env: в продакшне установи DEBUG=False
-DEBUG = os.getenv("DEBUG", "True").lower() in ("1", "true", "yes")
+DEBUG = True
 
 # === Разрешённые хосты ===
 ALLOWED_HOSTS = [
