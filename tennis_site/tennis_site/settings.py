@@ -179,8 +179,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # --- Регистрационный rate-limit (нашныe настройки для middleware) ---
 # Максимум регистраций с одного IP в окне
-REG_RATE_LIMIT = int(os.getenv("REG_RATE_LIMIT", "5"))          # например 5 попыток
-REG_RATE_WINDOW = int(os.getenv("REG_RATE_WINDOW", "3600"))    # окно в секундах (1 час)
+REG_RATE_LIMIT = int(os.getenv("REG_RATE_LIMIT", "6"))          # например 5 попыток
+REG_RATE_WINDOW = int(os.getenv("REG_RATE_WINDOW", "600"))    # окно в секундах (1 час)
 # Пути, которые будем отслеживать (поставь реальные пути регистрации в твоём проекте)
 REG_RATE_CHECK_PATHS = [
     "/accounts/register/",

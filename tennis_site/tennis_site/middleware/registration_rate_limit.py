@@ -12,8 +12,8 @@ class RegistrationRateLimitMiddleware(MiddlewareMixin):
     """
     Ограничивает количество регистраций с одного IP за окно времени.
     Настройки в settings.py:
-      REG_RATE_LIMIT = 5              # макс. попыток за окно
-      REG_RATE_WINDOW = 3600         # окно в секундах (по умолчанию 1 час)
+      REG_RATE_LIMIT = 6             # макс. попыток за окно
+      REG_RATE_WINDOW = 600          # окно в секундах (по умолчанию 1 час)
       REG_BLOCK_STATUS = 429         # HTTP статус при блокировке
       REG_RATE_CHECK_PATHS = ["/accounts/register/", "/api/register/"]
       REG_TRUSTED_PROXY_HEADER = "HTTP_X_FORWARDED_FOR" # заголовок для IP из proxy
@@ -46,8 +46,8 @@ class RegistrationRateLimitMiddleware(MiddlewareMixin):
             return None
 
         ip = self._get_remote_ip(request) or "unknown"
-        window = getattr(settings, "REG_RATE_WINDOW", 3600)
-        limit = getattr(settings, "REG_RATE_LIMIT", 5)
+        window = getattr(settings, "REG_RATE_WINDOW", 600)
+        limit = getattr(settings, "REG_RATE_LIMIT", 6)
         cache_key = f"reg_rl:{ip}"
 
         # Стратегия: храним (count, first_ts)
